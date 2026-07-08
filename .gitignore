@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+build/
+dist/
+*.egg
+
+# Runtime data & caches (not source code)
+data/
+logs/
+results/
+*.jsonl

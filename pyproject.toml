@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "automl-reusables"
+version = "0.1.0"
+description = "Shared library for the AutoML microservices (contracts, meta-features, prompt conditions, execution runner)."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "pandas",
+    "numpy",
+    "scikit-learn",
+    "scipy",
+    "tabulate",
+    "requests",
+    "openml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
