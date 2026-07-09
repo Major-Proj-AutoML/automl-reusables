@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import os
 import re
 
 import requests
 
 from src.contracts import ErrorCategory
 
-_OLLAMA_URL = "http://localhost:11434/api/generate"
+_OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/") + "/api/generate"
 _FENCE_RE = re.compile(r"```(?:python)?\s*\n?(.*?)```", re.DOTALL)
 
 
