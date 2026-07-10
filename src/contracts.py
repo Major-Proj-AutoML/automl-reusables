@@ -67,6 +67,7 @@ class ErrorCategory(str, Enum):
     DEPRECATED_API = "deprecated_api"
     METRIC_MISMATCH = "metric_mismatch"
     MISSING_NAME = "missing_name"
+    SUSPICIOUS_LEAKAGE = "suspicious_leakage"
     TIMEOUT = "timeout"
     RUNTIME_OTHER = "runtime_other"
     RESOURCE_LIMIT = "resource_limit"

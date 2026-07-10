@@ -106,6 +106,22 @@ def execute_pipeline(
             **common,
         )
 
+    # Sanity check: near-perfect balanced accuracy on real datasets is
+    # almost always a leakage bug (target column not dropped, train/test
+    # confusion, etc.). Flag it instead of treating it as a valid result.
+    if task_type != TaskType.REGRESSION and score >= 0.995:
+        return RunResult(
+            success=False,
+            error_category=ErrorCategory.SUSPICIOUS_LEAKAGE.value,
+            error_message=(
+                f"SCORE={score:.4f} exceeds sanity threshold (>=0.995). "
+                "Likely leakage in generated code (e.g. target column not "
+                "dropped from features, test data used during training)."
+            ),
+            test_score=score,
+            **common,
+        )
+
     return RunResult(
         success=True,
         error_category=None,
