@@ -68,6 +68,7 @@ class ErrorCategory(str, Enum):
     METRIC_MISMATCH = "metric_mismatch"
     MISSING_NAME = "missing_name"
     SUSPICIOUS_LEAKAGE = "suspicious_leakage"
+    REASONING_UNFAITHFUL = "reasoning_unfaithful"
     TIMEOUT = "timeout"
     RUNTIME_OTHER = "runtime_other"
     RESOURCE_LIMIT = "resource_limit"
@@ -80,3 +81,51 @@ class GeneratedPipeline(BaseModel):
     dataset_id: str
     seed: int
     iteration: int
+
+
+class Decision(BaseModel):
+    """One structured claim by the LLM about a preprocessing/modeling choice.
+
+    Every field is machine-verifiable:
+      - meta_feature is a dotted path into the MetaFeatures object.
+      - observed_value must match the value at that path (within tolerance).
+      - action is a code symbol (class or function name) expected to appear
+        in the generated Python source.
+      - applied_to lists the column names the action targets.
+    """
+    step: str = Field(..., description="Human-readable step name, e.g. 'scaling', 'imputation'.")
+    rule_id: Optional[int] = Field(None, description="Which B2 rule the LLM cites, if any.")
+    meta_feature: Optional[str] = Field(
+        None,
+        description="Dotted path into MetaFeatures, e.g. 'distributional.outlier_ratio_per_numeric.Fare'.",
+    )
+    observed_value: Optional[float] = Field(None, description="Value the LLM claims it observed.")
+    threshold: Optional[float] = Field(None, description="Threshold that the rule uses.")
+    action: str = Field(..., description="Class/function name expected in the generated code.")
+    applied_to: list[str] = Field(default_factory=list, description="Columns the action targets.")
+
+
+class ReasoningTrace(BaseModel):
+    """Structured reasoning trace emitted by the LLM alongside its code."""
+    decisions: list[Decision] = Field(default_factory=list)
+    notes: Optional[str] = None
+
+
+class DecisionVerdict(BaseModel):
+    """Per-decision verification outcome."""
+    step: str
+    action: str
+    value_matches: Optional[bool] = Field(
+        None, description="True/False if a meta_feature+observed_value was supplied; None if not checkable."
+    )
+    action_present: bool = Field(..., description="Whether the action symbol appears in the generated code.")
+    reasons: list[str] = Field(default_factory=list, description="Human-readable notes on any failures.")
+
+
+class VerificationReport(BaseModel):
+    """Result of mechanically verifying a ReasoningTrace against code + meta-features."""
+    n_decisions: int
+    n_faithful: int
+    faithful: bool
+    verdicts: list[DecisionVerdict]
+    overall_notes: Optional[str] = None

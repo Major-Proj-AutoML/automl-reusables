@@ -214,8 +214,13 @@ def load_custom_dataset(
 
     cache_dir = _DATA_ROOT / "custom" / csv_path_obj.stem
     cache_dir.mkdir(parents=True, exist_ok=True)
+    original_path = cache_dir / "original.csv"
     train_path = cache_dir / "train.csv"
     test_path = cache_dir / "test.csv"
+    # Preserve the exact pre-split frame (after id-column drop and target
+    # validation, before train/test split) so the user can download the
+    # canonical copy used to build the experiment.
+    df.to_csv(original_path, index=False)
     df_train.to_csv(train_path, index=False)
     df_test.to_csv(test_path, index=False)
     _write_meta(cache_dir / "meta.json", target_col, tt, dataset_id=-1, seed=seed)
@@ -225,6 +230,7 @@ def load_custom_dataset(
         "dataset_name": csv_path_obj.stem,
         "task_type": tt,
         "target_col": target_col,
+        "original_path": str(original_path),
         "train_path": str(train_path),
         "test_path": str(test_path),
         "df_train": df_train,

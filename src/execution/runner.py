@@ -67,6 +67,14 @@ def execute_pipeline(
         stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
     runtime = time.monotonic() - start
 
+    # Persist stdout and stderr as sidecars so downstream verification (trace
+    # extraction, ablation, etc.) can read them without re-executing the code.
+    try:
+        Path(code_path + ".stdout.txt").write_text(stdout, encoding="utf-8")
+        Path(code_path + ".stderr.txt").write_text(stderr, encoding="utf-8")
+    except OSError:
+        pass  # sidecar failures should not break the run
+
     common = dict(
         dataset_id=pipeline.dataset_id,
         condition=pipeline.condition,

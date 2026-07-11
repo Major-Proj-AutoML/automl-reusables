@@ -59,6 +59,33 @@ class B2MetaFeatureGuided(PromptCondition):
             "## Decision Rules (apply where conditions match)\n\n"
             f"{_DECISION_RULES}\n"
         )
+        reasoning_section = (
+            "## Structured Reasoning (mandatory — machine-verified)\n\n"
+            "After the `SCORE: <number>` line, your script MUST also print exactly one line of the form:\n\n"
+            "  REASONING: <json>\n\n"
+            "where <json> is a single-line JSON object with this shape:\n\n"
+            "```json\n"
+            "{\n"
+            '  "decisions": [\n'
+            "    {\n"
+            '      "step": "scaling",\n'
+            '      "rule_id": 7,\n'
+            '      "meta_feature": "distributional.outlier_ratio_per_numeric.Fare",\n'
+            '      "observed_value": 0.128,\n'
+            '      "threshold": 0.05,\n'
+            '      "action": "RobustScaler",\n'
+            '      "applied_to": ["Fare"]\n'
+            "    }\n"
+            "  ]\n"
+            "}\n"
+            "```\n\n"
+            "Rules for producing the trace:\n"
+            "- One decision per meaningful choice you made (imputation, scaling, encoding, model, feature-selection, imbalance handling).\n"
+            "- `meta_feature` is a dotted path into the meta-feature JSON above (e.g. `simple.class_balance_ratio`, `information.max_pairwise_correlation`). Omit if the decision is not tied to a specific meta-feature.\n"
+            "- `observed_value` must be the exact number you read from that path (copy it verbatim, no rounding). If the meta_feature points to a scalar, use it. If it points to a dict of per-column values, pick the value for the relevant column.\n"
+            "- `action` must be the class or function name that actually appears in your imports (e.g. `RobustScaler`, `IterativeImputer`, `TargetEncoder`, `LGBMClassifier`).\n"
+            "- The trace is verified mechanically against your generated code and the meta-feature values. Fabricating numbers or citing symbols you did not actually import will cause the run to be flagged as unfaithful and discarded.\n"
+        )
         return (
             "You are an AutoML assistant. Generate a complete scikit-learn pipeline for the following task:\n\n"
             f"{task_description}\n\n"
@@ -70,5 +97,6 @@ class B2MetaFeatureGuided(PromptCondition):
             "The script will run in an isolated environment with no pre-imported names.\n\n"
             f"{schema_section}\n"
             f"{meta_section}\n"
-            f"{rules_section}"
+            f"{rules_section}\n"
+            f"{reasoning_section}"
         )
