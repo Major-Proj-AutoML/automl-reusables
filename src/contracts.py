@@ -100,7 +100,10 @@ class Decision(BaseModel):
         description="Dotted path into MetaFeatures, e.g. 'distributional.outlier_ratio_per_numeric.Fare'.",
     )
     observed_value: Optional[float] = Field(None, description="Value the LLM claims it observed.")
-    threshold: Optional[float] = Field(None, description="Threshold that the rule uses.")
+    # Threshold is descriptive-only (we don't verify against it) so accept any
+    # scalar the LLM emits — e.g. a numeric bound (0.05) or a symbolic hint
+    # ("n_categorical > n_numeric"). Parsing must not fail on this field.
+    threshold: Optional[float | str] = Field(None, description="Threshold or symbolic condition from the rule.")
     action: str = Field(..., description="Class/function name expected in the generated code.")
     applied_to: list[str] = Field(default_factory=list, description="Columns the action targets.")
 
