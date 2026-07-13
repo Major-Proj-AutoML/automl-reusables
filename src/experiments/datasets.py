@@ -10,6 +10,10 @@ from sklearn.model_selection import train_test_split
 
 from src.contracts import TaskType
 
+SELECTED_REGRESSION: dict[int, str] = {
+    41211: "ames_housing",
+}
+
 SELECTED_CLASSIFICATION: dict[int, str] = {
     # Small (<1000 rows)
     37: "diabetes",
@@ -93,7 +97,11 @@ def _drop_id_columns(df: pd.DataFrame, target_col: str) -> pd.DataFrame:
 
 def load_dataset(dataset_id: int, seed: int = 42, test_size: float = 0.2) -> dict[str, Any]:
     """Load (or cache) an OpenML dataset and return a split + metadata dict."""
-    name = SELECTED_CLASSIFICATION.get(dataset_id, f"openml_{dataset_id}")
+    name = (
+        SELECTED_CLASSIFICATION.get(dataset_id)
+        or SELECTED_REGRESSION.get(dataset_id)
+        or f"openml_{dataset_id}"
+    )
     dataset_dir = _DATA_ROOT / name
     train_path = dataset_dir / "train.csv"
     test_path = dataset_dir / "test.csv"
