@@ -39,6 +39,35 @@ def call_llm(prompt: str, backend: str, seed: int) -> str:
     return _strip_fences(text)
 
 
+def call_llm_with_usage(
+    prompt: str, backend: str, seed: int
+) -> tuple[str, int | None, int | None]:
+    """Same as :func:`call_llm` but also returns Ollama's token telemetry.
+
+    Returns ``(code_text, prompt_tokens, completion_tokens)``. The token counts
+    come from Ollama's ``prompt_eval_count`` and ``eval_count`` fields; when
+    Ollama omits them (cloud responses on some retry paths, or older versions),
+    the returned values are ``None`` — callers should persist ``NULL``.
+    """
+    body = {
+        "model": backend,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"seed": seed, "temperature": 0.7},
+    }
+    try:
+        response = requests.post(_OLLAMA_URL, json=body, timeout=600)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        raise ConnectionError(
+            f"Failed to reach Ollama at {_OLLAMA_URL}. Is `ollama serve` running? Original: {exc}"
+        ) from exc
+
+    payload = response.json()
+    text = _strip_fences(payload.get("response", ""))
+    return text, payload.get("prompt_eval_count"), payload.get("eval_count")
+
+
 def build_error_feedback(
     error_message: str,
     error_category: str | None = None,
