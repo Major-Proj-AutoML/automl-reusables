@@ -21,10 +21,10 @@ CLASS IMBALANCE RULES:
 10. If class_balance_ratio < 0.3: apply SMOTE or set class_weight='balanced' in the estimator.
 11. If class_balance_ratio < 0.1: combine SMOTE with Tomek links; do NOT use plain accuracy as the metric.
 
-MODEL SELECTION HINTS (from landmarking):
-12. If decision_stump_score > 0.75: the problem may be simple — try LogisticRegression or shallow DecisionTreeClassifier first.
-13. If one_nn_score - naive_bayes_score > 0.1: data has local structure — prefer tree ensembles (RandomForest, XGBoost) or KNN.
-14. If naive_bayes_score - one_nn_score > 0.1: features are relatively independent — linear models or GaussianNB are viable.
+MODEL SELECTION HINTS (from landmarking; scores are in `landmarks.metric_used` units — balanced_accuracy for classification, negative RMSE for regression):
+12. If decision_stump_score > 0.75 (classification only): the problem may be simple — try LogisticRegression or shallow DecisionTreeClassifier first.
+13. If one_nn_score - linear_score > 0.1: data has local structure — prefer tree ensembles (RandomForest, XGBoost) or KNN. (For legacy cached meta-features, `naive_bayes_score` holds the same value as `linear_score`.)
+14. If linear_score - one_nn_score > 0.1: features are relatively independent — a linear model (LogisticRegression on classification, Ridge on regression) is viable.
 
 IMPORTANT: For each pipeline component you choose, cite which meta-feature or rule informed your decision.\
 """

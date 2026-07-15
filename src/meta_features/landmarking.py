@@ -43,16 +43,20 @@ def compute_landmarks(df: pd.DataFrame, target_col: str, task_type: TaskType) ->
             return float("nan")
 
     if is_classification:
+        linear = _score(GaussianNB(), "balanced_accuracy")
         return LandmarkScores(
             decision_stump_score=_score(DecisionTreeClassifier(max_depth=1, random_state=42), "balanced_accuracy"),
-            naive_bayes_score=_score(GaussianNB(), "balanced_accuracy"),
+            naive_bayes_score=linear,
+            linear_score=linear,
             one_nn_score=_score(KNeighborsClassifier(n_neighbors=1), "balanced_accuracy"),
             metric_used="balanced_accuracy",
         )
     else:
+        linear = _score(Ridge(), "neg_root_mean_squared_error")
         return LandmarkScores(
             decision_stump_score=_score(DecisionTreeRegressor(max_depth=1, random_state=42), "neg_root_mean_squared_error"),
-            naive_bayes_score=_score(Ridge(), "neg_root_mean_squared_error"),
+            naive_bayes_score=linear,
+            linear_score=linear,
             one_nn_score=_score(KNeighborsRegressor(n_neighbors=1), "neg_root_mean_squared_error"),
             metric_used="neg_rmse",
         )

@@ -1,6 +1,9 @@
+import logging
 from pydantic import BaseModel, Field
 from typing import Literal, Optional
 from enum import Enum
+
+_log = logging.getLogger(__name__)
 
 class TaskType(str, Enum):
     BINARY_CLASSIFICATION = "binary_classification"
@@ -30,9 +33,23 @@ class InformationStats(BaseModel):
 
 class LandmarkScores(BaseModel):
     decision_stump_score: float
+    # Legacy field name; holds GaussianNB score on classification and Ridge on
+    # regression — the "naive_bayes" label misleads on regression. Retained for
+    # backward compatibility with cached meta_features JSONB. New readers should
+    # prefer `linear_score` (see `linear_score_or_legacy`).
     naive_bayes_score: float
     one_nn_score: float
     metric_used: Literal["balanced_accuracy", "neg_rmse"]
+    # Task-agnostic alias for `naive_bayes_score`. Nullable so legacy JSONBs
+    # (which lack this key) still hydrate.
+    linear_score: Optional[float] = None
+
+    @property
+    def linear_score_or_legacy(self) -> float:
+        if self.linear_score is not None:
+            return self.linear_score
+        _log.debug("reading legacy field naive_bayes_score as linear_score")
+        return self.naive_bayes_score
 
 class MetaFeatures(BaseModel):
     """The single source of truth for what we extract from a dataset."""
