@@ -40,7 +40,7 @@ def call_llm(prompt: str, backend: str, seed: int) -> str:
 
 
 def call_llm_with_usage(
-    prompt: str, backend: str, seed: int
+    prompt: str, backend: str, seed: int, num_predict: int | None = None
 ) -> tuple[str, int | None, int | None]:
     """Same as :func:`call_llm` but also returns Ollama's token telemetry.
 
@@ -48,12 +48,19 @@ def call_llm_with_usage(
     come from Ollama's ``prompt_eval_count`` and ``eval_count`` fields; when
     Ollama omits them (cloud responses on some retry paths, or older versions),
     the returned values are ``None`` — callers should persist ``NULL``.
+
+    If ``num_predict`` is set, the request caps completion tokens (Ollama's
+    ``num_predict`` option). Used to guard against runaway generation on
+    reasoning models on specific (model, condition) combinations.
     """
+    options = {"seed": seed, "temperature": 0.7}
+    if num_predict is not None:
+        options["num_predict"] = num_predict
     body = {
         "model": backend,
         "prompt": prompt,
         "stream": False,
-        "options": {"seed": seed, "temperature": 0.7},
+        "options": options,
     }
     try:
         response = requests.post(_OLLAMA_URL, json=body, timeout=600)
