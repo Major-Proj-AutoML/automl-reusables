@@ -34,5 +34,7 @@ class B1Schema(PromptCondition):
             "IMPORTANT: The script must include ALL import statements at the top. Every class and function you "
             "use (e.g. RobustScaler, ColumnTransformer, train_test_split, etc.) must be explicitly imported. "
             "The script will run in an isolated environment with no pre-imported names.\n\n"
+            "PERSIST THE MODEL: After training, save the fitted estimator with "
+            "`import os, joblib; joblib.dump(model, os.path.join(os.environ['MODEL_OUTPUT_DIR'], 'model.joblib'))`.\n\n"
             f"{schema_section}"
         )

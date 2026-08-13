@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -45,6 +46,12 @@ def execute_pipeline(
         f.write(pipeline.code)
         code_path = f.name
 
+    # Per-run artifacts dir the child process can write model files into.
+    # Convention: `<code_path>.models/`. Callers scan it after the run.
+    models_dir = Path(code_path + ".models")
+    models_dir.mkdir(exist_ok=True)
+    child_env = {**os.environ, "MODEL_OUTPUT_DIR": str(models_dir)}
+
     start = time.monotonic()
     timed_out = False
     stdout = ""
@@ -57,6 +64,7 @@ def execute_pipeline(
             text=True,
             timeout=timeout_seconds,
             cwd=str(_LOGS_DIR),
+            env=child_env,
         )
         stdout = proc.stdout
         stderr = proc.stderr
