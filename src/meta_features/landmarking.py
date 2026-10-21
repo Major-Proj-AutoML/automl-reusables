@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright 2026 The VESIT AutoML Project contributors
+
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import Ridge

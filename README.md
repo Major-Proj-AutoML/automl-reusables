@@ -35,3 +35,20 @@ The installable package name is `automl-reusables`.
 - `automl-generation-service` — async LLM generation via RQ (port 8003)
 - `automl-analysis-service` — analysis / stats API (port 8004)
 - `automl-gateway` — API gateway for the frontend (port 8000)
+
+## License
+
+Dual-licensed under either of
+
+- Apache License 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
+- MIT license ([LICENSE-MIT](LICENSE-MIT))
+
+at your option. Unless you explicitly state otherwise, any contribution you
+intentionally submit for inclusion in this work shall be dual-licensed as
+above, without any additional terms or conditions.
+
+## Citing
+
+Part of the VESIT AutoML project. For citation metadata and (once released) a
+DOI, see the [`automl-infra`](https://github.com/Major-Proj-AutoML/automl-infra)
+repository's `CITATION.cff`.
