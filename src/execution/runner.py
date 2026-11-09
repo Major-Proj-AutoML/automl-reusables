@@ -43,7 +43,16 @@ def _ensure_experimental_imports(code: str) -> str:
                 preamble.append(line)
     if not preamble:
         return code
-    return "\n".join(preamble) + "\n" + code
+    # `from __future__` imports must stay the first statements in the file, so
+    # insert the enable-imports *after* any the generated code starts with
+    # (prepending above them turns valid code into a SyntaxError).
+    lines = code.splitlines(keepends=True)
+    insert_at = 0
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("from __future__ import"):
+            insert_at = i + 1
+    block = "\n".join(preamble) + "\n"
+    return "".join(lines[:insert_at]) + block + "".join(lines[insert_at:])
 
 
 def execute_pipeline(
