@@ -21,6 +21,40 @@ def _safe(token: str) -> str:
     return "".join(c if c.isalnum() or c in "-_" else "_" for c in token)
 
 
+# A handful of scikit-learn estimators are gated behind an explicit "enable"
+# import that MUST execute before the estimator itself is imported. LLMs
+# routinely import the estimator and forget the enable line, which raises
+# ImportError at runtime and burns every retry iteration. Deterministically
+# prepend the missing enable-import so a generated pipeline never fails on this
+# alone. (Harmless no-op when the estimator isn't used.)
+_EXPERIMENTAL_ENABLES = (
+    ("IterativeImputer", "enable_iterative_imputer"),
+    ("HalvingGridSearchCV", "enable_halving_search_cv"),
+    ("HalvingRandomSearchCV", "enable_halving_search_cv"),
+)
+
+
+def _ensure_experimental_imports(code: str) -> str:
+    preamble: list[str] = []
+    for symbol, enabler in _EXPERIMENTAL_ENABLES:
+        if symbol in code and enabler not in code:
+            line = f"from sklearn.experimental import {enabler}  # noqa: F401 (auto-added)"
+            if line not in preamble:
+                preamble.append(line)
+    if not preamble:
+        return code
+    # `from __future__` imports must stay the first statements in the file, so
+    # insert the enable-imports *after* any the generated code starts with
+    # (prepending above them turns valid code into a SyntaxError).
+    lines = code.splitlines(keepends=True)
+    insert_at = 0
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("from __future__ import"):
+            insert_at = i + 1
+    block = "\n".join(preamble) + "\n"
+    return "".join(lines[:insert_at]) + block + "".join(lines[insert_at:])
+
+
 def execute_pipeline(
     pipeline: GeneratedPipeline,
     task_type: TaskType,
@@ -46,7 +80,7 @@ def execute_pipeline(
         dir=str(_LOGS_DIR),
         encoding="utf-8",
     ) as f:
-        f.write(pipeline.code)
+        f.write(_ensure_experimental_imports(pipeline.code))
         code_path = f.name
 
     # Per-run artifacts dir the child process can write model files into.
